@@ -1,0 +1,53 @@
+# 项目配置
+spring:
+  application:
+    name: ai-agent
+  # 数据库配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/ai_agent
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  configuration:
+    # MyBatis 配置
+    map-underscore-to-camel-case: false
+    # 日志配置
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    # 数据库配置
+    db-config:
+      # 逻辑删除配置
+      logic-delete-field: isDelete
+      # 逻辑删除值
+      logic-delete-value: 1
+      # 逻辑未删除值
+      logic-not-delete-value: 0
+
+server:
+  # 服务器配置
+  port: 8123
+  # 上下文路径配置
+  servlet:
+    context-path: /api
+
+# springdoc-openapi 配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.example.aiagent.controller
+# knife4j 配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+
