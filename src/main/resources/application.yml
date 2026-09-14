@@ -53,4 +53,8 @@ knife4j:
   setting:
     language: zh_cn
 
+logging:
+  level:
+    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: debug
+
 
