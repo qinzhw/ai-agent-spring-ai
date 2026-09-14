@@ -2,6 +2,7 @@ package com.example.aiagent.app;
 
 import com.example.aiagent.advisor.MyLoggerAdvisor;
 import com.example.aiagent.advisor.ReReadingAdvisor;
+import com.example.aiagent.chatmemory.FileBasedChatMemory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -31,8 +32,12 @@ public class LoveApp {
      * @param dashscopeChatModel
      */
     public LoveApp(ChatModel dashscopeChatModel) {
-        // 初始化基于内存的对话记忆
-        ChatMemory chatMemory = new InMemoryChatMemory();
+        // 初始化基于文件的对话记忆
+        String fileDir = System.getProperty("user.dir") + "/tmp/chat-memory";
+        ChatMemory chatMemory = new FileBasedChatMemory(fileDir);
+
+//        // 初始化基于内存的对话记忆
+//        ChatMemory chatMemory = new InMemoryChatMemory();
         chatClient = ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(
@@ -77,7 +82,7 @@ public class LoveApp {
     public LoveReport doChatWithReport(String message, String chatId) {
         LoveReport loveReport = chatClient
                 .prompt()
-                .system(SYSTEM_PROMPT + "每次对话后都要生成恋爱指导结果，标题为{用户名}的恋爱报告，内容为建议列表")
+                .system(SYSTEM_PROMPT + "每次对话后都要生成恋爱指导结果，标题为{用户名}的恋爱报告，内容为分点建议的列表")
                 .user(message)
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
