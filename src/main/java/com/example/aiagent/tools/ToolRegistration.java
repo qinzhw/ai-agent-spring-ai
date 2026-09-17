@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ToolRegistration {
     // 从配置文件读取 search-api.api-key，网页搜索工具的密钥
-    @Value("${search-api.api-key}")
+    @Value("${search-api.api-key:}")
     private String searchApiKey;
 
     @Bean

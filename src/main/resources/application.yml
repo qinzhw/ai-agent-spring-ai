@@ -4,6 +4,12 @@ spring:
     name: ai-agent
   profiles:
     active: local
+  ai:
+    mcp:
+      client:
+        stdio:
+          servers-configuration: classpath:mcp-servers.json
+
 
   # 数据库配置
   datasource:
@@ -53,8 +59,9 @@ knife4j:
   setting:
     language: zh_cn
 
+# 修改日志级别：查看 Spring AI 更多调用细节
 logging:
   level:
-    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: debug
+    org.springframework.ai: DEBUG
 
 

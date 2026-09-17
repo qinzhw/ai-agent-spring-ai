@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "amap-maps": {
+      "command": "C:/Users/energ/.workbuddy/binaries/node/versions/22.22.2-3/node.exe",
+      "args": [
+        "C:/Users/energ/.workbuddy/amap-mcp/node_modules/@amap/amap-maps-mcp-server/build/index.js"
+      ],
+      "env": {
+        "AMAP_MAPS_API_KEY": ""
+      }
+    }
+  }
+}
