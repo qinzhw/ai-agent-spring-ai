@@ -1,0 +1,13 @@
+spring:
+  ai:
+    mcp:
+      server:
+        name: yu-image-search-mcp-server
+        version: 0.0.1
+        type: SYNC
+        # sse
+        stdio: false
+
+logging:
+  level:
+    io.modelcontextprotocol.spec.transport.WebMvcSseServerTransport: OFF

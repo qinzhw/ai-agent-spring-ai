@@ -77,7 +77,11 @@ class LoveAppTest {
     void doChatWithMcp() {
         String chatId = UUID.randomUUID().toString();
         // 测试地图 MCP
-        String message = "我的对象居住在珠海香洲区，请帮我找到 5 公里内合适的约会地点";
+//        String message = "我的对象居住在珠海香洲区，请帮我找到 5 公里内合适的约会地点";
+//        String answer = loveApp.doChatWithMcp(message, chatId);
+//        Assertions.assertNotNull(answer);
+        // 测试图片搜索 MCP
+        String message = "现在立即调用 searchImage 工具（参数 keyword 传 happy couple），然后把工具返回的图片链接原样逐条列出，只输出链接，不要任何其他文字。若未调用工具则视为任务失败。" ;
         String answer = loveApp.doChatWithMcp(message, chatId);
         Assertions.assertNotNull(answer);
     }

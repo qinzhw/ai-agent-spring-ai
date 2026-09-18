@@ -8,6 +8,18 @@
       "env": {
         "AMAP_MAPS_API_KEY": ""
       }
+    },
+    "image-search-mcp-server": {
+      "command": "C:/Program Files/Java/jdk-21.0.11/bin/java.exe",
+      "args": [
+        "-Dspring.ai.mcp.server.stdio=true",
+        "-Dspring.main.web-application-type=none",
+        "-Dlogging.pattern.console=",
+        "-jar",
+        "D:/Work_Projects/pj/ai-agent-spring-ai/image-search-mcp-server/target/image-search-mcp-server-0.0.1-SNAPSHOT.jar"
+      ],
+      "env": {}
     }
   }
+
 }
