@@ -67,5 +67,8 @@ knife4j:
 logging:
   level:
     org.springframework.ai: DEBUG
+  pattern:
+    # 只保留线程名、类名、日志消息，移除日期、级别、pid等前缀
+    console: "%-50logger{50} : %msg%n"
 
 
