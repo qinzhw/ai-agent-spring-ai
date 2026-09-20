@@ -6,6 +6,8 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 /**
  * 网络搜索工具
  */
+@Component
 public class WebSearchTool {
 
     // SearchAPI 的搜索接口地址
@@ -22,7 +25,7 @@ public class WebSearchTool {
 
     private final String apiKey;
 
-    public WebSearchTool(String apiKey) {
+    public WebSearchTool(@Value("${search-api.api-key}") String apiKey) {
         this.apiKey = apiKey;
     }
 

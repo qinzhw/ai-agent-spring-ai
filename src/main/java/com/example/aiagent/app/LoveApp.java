@@ -3,6 +3,8 @@ package com.example.aiagent.app;
 import com.example.aiagent.advisor.MyLoggerAdvisor;
 import com.example.aiagent.advisor.ReReadingAdvisor;
 import com.example.aiagent.chatmemory.FileBasedChatMemory;
+import com.example.aiagent.dto.LoveReport;
+import io.modelcontextprotocol.client.McpSyncClient;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -17,7 +19,13 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+
+import java.util.List;
 
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
@@ -36,14 +44,12 @@ public class LoveApp {
     /**
      * 初始化 ChatClient
      * @param dashscopeChatModel
+     * @param chatMemoryDir 对话记忆持久化目录（可通过 app.chat-memory-dir 配置，默认为 user.dir/tmp/chat-memory）
      */
-    public LoveApp(ChatModel dashscopeChatModel) {
+    public LoveApp(ChatModel dashscopeChatModel,
+                   @Value("${app.chat-memory-dir:${user.dir}/tmp/chat-memory}") String chatMemoryDir) {
         // 初始化基于文件的对话记忆
-        String fileDir = System.getProperty("user.dir") + "/tmp/chat-memory";
-        ChatMemory chatMemory = new FileBasedChatMemory(fileDir);
-
-//        // 初始化基于内存的对话记忆
-//        ChatMemory chatMemory = new InMemoryChatMemory();
+        ChatMemory chatMemory = new FileBasedChatMemory(chatMemoryDir);
         chatClient = ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(
@@ -57,26 +63,19 @@ public class LoveApp {
     }
 
     /**
-     * AI 基础对话（支持对轮对话记忆）
+     * AI 基础对话（支持对轮对话记忆，SSE 流式输出）
      * @param message
      * @param chatId
      * @return
      */
-    public String doChat(String message, String chatId) {
-        ChatResponse response = chatClient
+    public Flux<String> doChatByStream(String message, String chatId) {
+        return chatClient
                 .prompt()
                 .user(message)
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
-                .call()
-                .chatResponse();
-        String content = response.getResult().getOutput().getText();
-        log.info("content: {}", content);
-        return content;
-    }
-
-    record LoveReport(String title, String content) {
-
+                .stream()
+                .content();
     }
 
     /**
@@ -99,6 +98,7 @@ public class LoveApp {
     }
 
     // AI 应用知识库问答功能
+    @Lazy
     @Resource
     private VectorStore loveAppVectorStore;
 

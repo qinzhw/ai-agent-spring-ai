@@ -1,4 +1,4 @@
-package com.example.aiagent.agent.model;
+package com.example.aiagent.agent.enums;
 
 /**
  * 代理执行状态的枚举类
@@ -25,4 +25,3 @@ public enum AgentState {
      */
     ERROR
 }
-

@@ -1,14 +1,16 @@
 package com.example.aiagent.agent;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ReAct (Reasoning and Acting) 模式的代理抽象类
  * 实现了思考-行动的循环模式
  */
-@EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
+@Setter
+@Slf4j
 public abstract class ReActAgent extends BaseAgent {
 
     /**
@@ -40,7 +42,7 @@ public abstract class ReActAgent extends BaseAgent {
             return act();
         } catch (Exception e) {
             // 记录异常日志
-            e.printStackTrace();
+            log.error("步骤执行失败", e);
             return "步骤执行失败: " + e.getMessage();
         }
     }

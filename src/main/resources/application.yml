@@ -7,6 +7,9 @@ spring:
   ai:
     mcp:
       client:
+        initialized: false
+        # 握手/调用超时时间（默认 20s），MCP server 首次启动较慢时给足余量
+        request-timeout: 60s
         sse:
           connections:
             image-search-mcp-server:
@@ -16,27 +19,11 @@ spring:
 
 
   # 数据库配置
-  datasource:
-    url: jdbc:mysql://localhost:3306/ai_agent
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-mybatis-plus:
-  configuration:
-    # MyBatis 配置
-    map-underscore-to-camel-case: false
-    # 日志配置
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  global-config:
-    # 数据库配置
-    db-config:
-      # 逻辑删除配置
-      logic-delete-field: isDelete
-      # 逻辑删除值
-      logic-delete-value: 1
-      # 逻辑未删除值
-      logic-not-delete-value: 0
+  # datasource:
+  #   url: jdbc:mysql://localhost:3306/ai_agent
+  #   username: root
+  #   password: root
+  #   driver-class-name: com.mysql.cj.jdbc.Driver
 
 server:
   # 服务器配置
