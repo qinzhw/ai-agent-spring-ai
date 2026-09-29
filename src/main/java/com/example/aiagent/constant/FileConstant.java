@@ -1,12 +1,12 @@
 package com.example.aiagent.constant;
 
 /**
- * 文件常量
+ * 文件相关常量
  */
-public interface FileConstant {
+public class FileConstant {
 
     /**
-     * 文件保存目录
+     * 文件保存根目录
      */
-    String FILE_SAVE_DIR = System.getProperty("user.dir") + "/tmp";
+    public static final String FILE_SAVE_DIR = System.getProperty("user.dir") + "/files";
 }

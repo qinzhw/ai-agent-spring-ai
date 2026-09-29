@@ -18,12 +18,22 @@ spring:
 #          servers-configuration: classpath:mcp-servers.json
 
 
-  # 数据库配置
-  # datasource:
-  #   url: jdbc:mysql://localhost:3306/ai_agent
-  #   username: root
-  #   password: root
-  #   driver-class-name: com.mysql.cj.jdbc.Driver
+  # 数据库配置（PostgreSQL + pgvector）
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ai_agent?stringtype=unspecified
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: assign_uuid
+  type-handlers-package: com.example.aiagent.typehandler
+  mapper-locations: classpath:mapper/*.xml
 
 server:
   # 服务器配置
