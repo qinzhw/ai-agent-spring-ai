@@ -2,49 +2,55 @@ package com.example.aiagent.controller;
 
 import com.example.aiagent.common.BaseResponse;
 import com.example.aiagent.common.ResultUtils;
-import com.example.aiagent.model.entity.Agent;
-import com.example.aiagent.service.AgentService;
+import com.example.aiagent.model.request.CreateAgentRequest;
+import com.example.aiagent.model.request.UpdateAgentRequest;
+import com.example.aiagent.model.response.CreateAgentResponse;
+import com.example.aiagent.model.vo.AgentVO;
+import com.example.aiagent.service.AgentFacadeService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * 智能体管理接口
- */
 @RestController
 @RequestMapping("/agents")
 @RequiredArgsConstructor
 @Tag(name = "智能体管理")
 public class AgentController {
 
-    private final AgentService agentService;
+    private final AgentFacadeService agentFacadeService;
 
     @PostMapping
-    public BaseResponse<Agent> create(@RequestBody Agent agent) {
-        agentService.save(agent);
-        return ResultUtils.success(agent);
+    @Operation(summary = "创建智能体")
+    public BaseResponse<CreateAgentResponse> create(@RequestBody CreateAgentRequest request) {
+        return ResultUtils.success(agentFacadeService.createAgent(request));
     }
 
     @GetMapping("/{id}")
-    public BaseResponse<Agent> getById(@PathVariable String id) {
-        return ResultUtils.success(agentService.getById(id));
+    @Operation(summary = "获取智能体详情")
+    public BaseResponse<AgentVO> getById(@PathVariable String id) {
+        return ResultUtils.success(agentFacadeService.getAgent(id));
     }
 
     @GetMapping
-    public BaseResponse<List<Agent>> list() {
-        return ResultUtils.success(agentService.list());
+    @Operation(summary = "获取智能体列表")
+    public BaseResponse<List<AgentVO>> list() {
+        return ResultUtils.success(agentFacadeService.getAgents());
     }
 
-    @PutMapping
-    public BaseResponse<Agent> update(@RequestBody Agent agent) {
-        agentService.updateById(agent);
-        return ResultUtils.success(agent);
+    @PatchMapping("/{id}")
+    @Operation(summary = "更新智能体（部分更新）")
+    public BaseResponse<Void> update(@PathVariable String id, @RequestBody UpdateAgentRequest request) {
+        agentFacadeService.updateAgent(id, request);
+        return ResultUtils.success(null);
     }
 
     @DeleteMapping("/{id}")
-    public BaseResponse<Boolean> delete(@PathVariable String id) {
-        return ResultUtils.success(agentService.removeById(id));
+    @Operation(summary = "删除智能体")
+    public BaseResponse<Void> delete(@PathVariable String id) {
+        agentFacadeService.deleteAgent(id);
+        return ResultUtils.success(null);
     }
 }
