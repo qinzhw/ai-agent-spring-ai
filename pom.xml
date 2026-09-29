@@ -133,6 +133,19 @@
             <artifactId>hutool-all</artifactId>
             <version>5.8.37</version>
         </dependency>
+
+        <!-- WebClient（调用 Ollama 嵌入 API） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <!-- flexmark：Markdown 解析库 -->
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-all</artifactId>
+            <version>0.64.8</version>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -145,7 +158,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- 参数校验：配合 DTO 上的 jakarta.validation 注解与 Controller 的 @Valid -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
