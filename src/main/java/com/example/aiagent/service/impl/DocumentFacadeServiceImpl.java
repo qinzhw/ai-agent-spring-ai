@@ -135,8 +135,13 @@ public class DocumentFacadeServiceImpl implements DocumentFacadeService {
                         continue;
                     }
 
-                    // 对标题进行嵌入
-                    float[] embedding = ragService.embed(title);
+                    // 嵌入文本：标题 + 内容（前 500 字符），确保语义检索准确
+                    String embedText = title;
+                    if (content != null && !content.trim().isEmpty()) {
+                        String contentPreview = content.length() > 500 ? content.substring(0, 500) : content;
+                        embedText = title + "\n" + contentPreview;
+                    }
+                    float[] embedding = ragService.embed(embedText);
 
                     // 创建 Chunk
                     Chunk chunk = new Chunk();

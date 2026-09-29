@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/messages")
+@RequestMapping("/chat-messages")
 @RequiredArgsConstructor
 @Tag(name = "消息管理")
 public class ChatMessageController {

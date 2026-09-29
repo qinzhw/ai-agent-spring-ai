@@ -46,6 +46,8 @@ public class SseMessage {
     public enum Type {
         /** AI 生成内容 */
         AI_GENERATED_CONTENT,
+        /** AI 流式输出增量片段 */
+        AI_STREAMING_DELTA,
         /** AI 规划中 */
         AI_PLANNING,
         /** AI 思考中 */

@@ -77,6 +77,22 @@ public class AgentFactory {
         // 5. 解析 maxMessages
         Integer maxMessages = resolveMaxMessages(agent);
 
+        // 6. 如果配置了 KnowledgeTool，自动注入知识库指令到 systemPrompt
+        String systemPrompt = agent.getSystemPrompt();
+        boolean hasKnowledgeTool = runtimeTools.stream()
+                .anyMatch(t -> "KnowledgeTool".equals(t.getName()));
+        if (hasKnowledgeTool && StringUtils.hasLength(agent.getAllowedKbs())) {
+            List<String> kbIds = parseAllowedTools(agent.getAllowedKbs());
+            if (!kbIds.isEmpty()) {
+                String kbInstruction = "\n\n【知识库使用指南】\n" +
+                        "你拥有 KnowledgeTool 工具，可以从知识库中检索信息。\n" +
+                        "当用户的问题涉及以下知识库时，你必须优先调用 KnowledgeTool 进行检索，再根据检索结果回答。\n" +
+                        "可用的知识库 ID 列表：" + String.join(", ", kbIds) + "\n" +
+                        "调用 KnowledgeTool 时，kbId 参数必须从上述列表中选择。\n";
+                systemPrompt = (systemPrompt != null ? systemPrompt : "") + kbInstruction;
+            }
+        }
+
         log.info("创建 AgentEngine: agent={}, model={}, tools={}",
                 agent.getName(), agent.getModel(),
                 runtimeTools.stream().map(RuntimeTool::getName).toList());
@@ -85,7 +101,7 @@ public class AgentFactory {
                 agent.getId(),
                 agent.getName(),
                 agent.getDescription(),
-                agent.getSystemPrompt(),
+                systemPrompt,
                 chatClient,
                 maxMessages,
                 memory,
@@ -193,7 +209,11 @@ public class AgentFactory {
      */
     private List<RuntimeTool> resolveRuntimeTools(Agent agent) {
         // 固定工具（所有 Agent 默认拥有）
-        List<RuntimeTool> runtimeTools = new ArrayList<>(toolFacadeService.getFixedTools());
+        List<RuntimeTool> fixedTools = toolFacadeService.getFixedTools();
+        Set<String> fixedToolNames = fixedTools.stream()
+                .map(RuntimeTool::getName)
+                .collect(Collectors.toSet());
+        List<RuntimeTool> runtimeTools = new ArrayList<>(fixedTools);
 
         // 可选工具（按 Agent 配置）
         List<String> allowedToolNames = parseAllowedTools(agent.getAllowedTools());
@@ -202,6 +222,10 @@ public class AgentFactory {
                     .collect(Collectors.toMap(RuntimeTool::getName, Function.identity()));
 
             for (String toolName : allowedToolNames) {
+                if (fixedToolNames.contains(toolName)) {
+                    // 固定工具已默认添加，跳过
+                    continue;
+                }
                 RuntimeTool tool = optionalToolMap.get(toolName);
                 if (tool != null) {
                     runtimeTools.add(tool);

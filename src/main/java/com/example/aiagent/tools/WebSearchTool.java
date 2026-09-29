@@ -25,7 +25,7 @@ public class WebSearchTool {
 
     private final String apiKey;
 
-    public WebSearchTool(@Value("${search-api.api-key}") String apiKey) {
+    public WebSearchTool(@Value("${search-api.api-key:}") String apiKey) {
         this.apiKey = apiKey;
     }
 

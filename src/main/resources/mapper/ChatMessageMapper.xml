@@ -16,12 +16,15 @@
     </resultMap>
 
     <select id="selectBySessionIdRecently" resultMap="BaseResultMap">
-        SELECT
-        id, session_id, role, content, metadata, created_at, updated_at
-        FROM chat_message
-        WHERE session_id = CAST(#{sessionId} AS uuid)
+        SELECT id, session_id, role, content, metadata, created_at, updated_at
+        FROM (
+            SELECT id, session_id, role, content, metadata, created_at, updated_at
+            FROM chat_message
+            WHERE session_id = CAST(#{sessionId} AS uuid)
+            ORDER BY created_at DESC
+            LIMIT #{limit}
+        ) sub
         ORDER BY created_at ASC
-        LIMIT #{limit}
     </select>
 
 </mapper>

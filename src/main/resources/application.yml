@@ -7,7 +7,7 @@ spring:
   ai:
     # DeepSeek 模型配置
     deepseek:
-      api-key: 
+      api-key: ${AI_DEEPSEEK_API_KEY:}
       base-url: https://api.deepseek.com
       chat:
         options:
@@ -15,7 +15,7 @@ spring:
           temperature: 0.8
     # 智谱 ZhipuAI 模型配置
     zhipuai:
-      api-key: 
+      api-key: ${AI_ZHIPU_API_KEY:}
       base-url: https://open.bigmodel.cn/api/paas
       chat:
         options:
@@ -91,8 +91,8 @@ knife4j:
 logging:
   level:
     org.springframework.ai: DEBUG
-  pattern:
-    # 只保留线程名、类名、日志消息，移除日期、级别、pid等前缀
-    console: "%-50logger{50} : %msg%n"
+#  pattern:
+#    # 只保留线程名、类名、日志消息，移除日期、级别、pid等前缀
+#    console: "%-50logger{50} : %msg%n"
 
 

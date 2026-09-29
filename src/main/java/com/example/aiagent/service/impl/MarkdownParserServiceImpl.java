@@ -59,6 +59,23 @@ public class MarkdownParserServiceImpl implements MarkdownParserService {
             child = child.getNext();
         }
 
+        boolean hasHeading = false;
+        for (Node node : topLevelNodes) {
+            if (node instanceof Heading) {
+                hasHeading = true;
+                break;
+            }
+        }
+
+        // 如果文档没有标题，将全文作为单个章节返回
+        if (!hasHeading) {
+            String fullContent = extractPlainText(document);
+            if (fullContent != null && !fullContent.trim().isEmpty()) {
+                sections.add(new MarkdownSection("全文", fullContent.trim()));
+            }
+            return;
+        }
+
         for (int i = 0; i < topLevelNodes.size(); i++) {
             Node node = topLevelNodes.get(i);
 

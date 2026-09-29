@@ -24,6 +24,8 @@ import org.springframework.util.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -143,7 +145,10 @@ public class AgentEngine {
     // ========================= Think =========================
 
     /**
-     * 调用模型进行决策，返回是否需要执行工具
+     * 调用模型进行决策（流式输出），返回是否需要执行工具
+     * <p>
+     * 使用 .stream() 逐 token 接收模型输出，通过 SSE 实时推送到前端。
+     * 流式完成后，检查是否有工具调用，决定是否进入 execute 阶段。
      */
     private boolean think() {
         agentState = AgentState.THINKING;
@@ -158,22 +163,104 @@ public class AgentEngine {
                 .messages(this.chatMemory.get(this.chatSessionId))
                 .build();
 
-        this.lastChatResponse = this.chatClient
+        // 预先创建 DB 记录，前端通过 messageId 跟踪流式消息
+        ChatMessage assistantChatMessage = new ChatMessage();
+        assistantChatMessage.setSessionId(this.chatSessionId);
+        assistantChatMessage.setRole("assistant");
+        assistantChatMessage.setContent("");
+        chatMessageService.save(assistantChatMessage);
+        String messageId = assistantChatMessage.getId();
+
+        StringBuilder contentBuilder = new StringBuilder();
+        AtomicReference<ChatResponse> lastResponseRef = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
+
+        this.chatClient
                 .prompt(prompt)
                 .system(thinkPrompt)
                 .toolCallbacks(this.availableTools.toArray(new ToolCallback[0]))
-                .call()
-                .chatClientResponse()
-                .chatResponse();
+                .stream()
+                .chatResponse()
+                .doOnNext(chunk -> {
+                    lastResponseRef.set(chunk);
+                    if (chunk.getResult() != null && chunk.getResult().getOutput() != null) {
+                        String token = chunk.getResult().getOutput().getText();
+                        if (token != null && !token.isEmpty()) {
+                            contentBuilder.append(token);
+                            // 逐 token 通过 SSE 推送到前端
+                            sseService.send(this.chatSessionId, SseMessage.builder()
+                                    .type(SseMessage.Type.AI_STREAMING_DELTA)
+                                    .payload(SseMessage.Payload.builder()
+                                            .content(token)
+                                            .role("assistant")
+                                            .build())
+                                    .metadata(SseMessage.Metadata.builder()
+                                            .chatMessageId(messageId)
+                                            .build())
+                                    .build());
+                        }
+                    }
+                })
+                .doOnError(error -> {
+                    log.error("流式响应异常", error);
+                    latch.countDown();
+                })
+                .doFinally(signal -> latch.countDown())
+                .subscribe();
 
-        Assert.notNull(lastChatResponse, "Last chat response cannot be null");
+        // 等待流式完成（Agent 已在异步线程中运行）
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("流式响应被中断", e);
+        }
 
-        AssistantMessage output = this.lastChatResponse.getResult().getOutput();
-        List<AssistantMessage.ToolCall> toolCalls = output.getToolCalls();
+        this.lastChatResponse = lastResponseRef.get();
+        String fullContent = contentBuilder.toString();
 
-        // 持久化 + SSE 推送
-        saveMessage(output);
-        flushPendingMessages();
+        // 提取工具调用
+        List<AssistantMessage.ToolCall> toolCalls = List.of();
+        if (this.lastChatResponse != null && this.lastChatResponse.getResult() != null) {
+            toolCalls = this.lastChatResponse.getResult().getOutput().getToolCalls();
+            if (toolCalls == null) {
+                toolCalls = List.of();
+            }
+        }
+
+        // 处理 directAnswer：将工具参数中的 answer 作为文本内容
+        String textContent = fullContent;
+        if (toolCalls.stream().anyMatch(tc -> "directAnswer".equals(tc.name()))
+                && (textContent == null || textContent.isBlank())) {
+            for (AssistantMessage.ToolCall tc : toolCalls) {
+                if ("directAnswer".equals(tc.name())) {
+                    try {
+                        JSONObject args = JSONUtil.parseObj(tc.arguments());
+                        textContent = args.getStr("answer", "");
+                    } catch (Exception e) {
+                        log.warn("解析 directAnswer 参数失败: {}", tc.arguments());
+                    }
+                }
+            }
+        }
+
+        // 更新 DB 记录为完整内容
+        assistantChatMessage.setContent(textContent);
+        if (!toolCalls.isEmpty()) {
+            JSONArray toolCallsJson = new JSONArray();
+            for (AssistantMessage.ToolCall tc : toolCalls) {
+                JSONObject tcJson = new JSONObject();
+                tcJson.set("id", tc.id());
+                tcJson.set("type", tc.type());
+                tcJson.set("name", tc.name());
+                tcJson.set("arguments", tc.arguments());
+                toolCallsJson.add(tcJson);
+            }
+            JSONObject meta = new JSONObject();
+            meta.set("toolCalls", toolCallsJson);
+            assistantChatMessage.setMetadata(meta.toString());
+        }
+        chatMessageService.updateById(assistantChatMessage);
 
         logToolCalls(toolCalls);
 
@@ -229,35 +316,13 @@ public class AgentEngine {
     // ========================= 持久化 & SSE =========================
 
     /**
-     * 将 AI 返回的 Message 持久化到数据库，并加入 pending 队列等待 SSE 推送
+     * 将工具响应消息持久化到数据库，并加入 pending 队列等待 SSE 推送
+     * <p>
+     * 注意：assistant 消息的持久化已在 think() 的流式处理中完成，
+     * 此方法仅处理 ToolResponseMessage。
      */
     private void saveMessage(Message message) {
-        if (message instanceof AssistantMessage assistantMessage) {
-            ChatMessage chatMessage = new ChatMessage();
-            chatMessage.setSessionId(this.chatSessionId);
-            chatMessage.setRole("assistant");
-            chatMessage.setContent(assistantMessage.getText());
-
-            // 将 toolCalls 存入 metadata
-            if (assistantMessage.getToolCalls() != null && !assistantMessage.getToolCalls().isEmpty()) {
-                JSONArray toolCallsJson = new JSONArray();
-                for (AssistantMessage.ToolCall tc : assistantMessage.getToolCalls()) {
-                    JSONObject tcJson = new JSONObject();
-                    tcJson.set("id", tc.id());
-                    tcJson.set("type", tc.type());
-                    tcJson.set("name", tc.name());
-                    tcJson.set("arguments", tc.arguments());
-                    toolCallsJson.add(tcJson);
-                }
-                JSONObject meta = new JSONObject();
-                meta.set("toolCalls", toolCallsJson);
-                chatMessage.setMetadata(meta.toString());
-            }
-
-            chatMessageService.save(chatMessage);
-            pendingMessages.add(chatMessage);
-
-        } else if (message instanceof ToolResponseMessage toolResponseMessage) {
+        if (message instanceof ToolResponseMessage toolResponseMessage) {
             for (ToolResponseMessage.ToolResponse toolResponse : toolResponseMessage.getResponses()) {
                 ChatMessage chatMessage = new ChatMessage();
                 chatMessage.setSessionId(this.chatSessionId);

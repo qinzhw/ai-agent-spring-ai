@@ -2,8 +2,10 @@ package com.example.aiagent.controller;
 
 import com.example.aiagent.common.BaseResponse;
 import com.example.aiagent.common.ResultUtils;
+import com.example.aiagent.converter.ChatMessageConverter;
 import com.example.aiagent.event.ChatEvent;
 import com.example.aiagent.model.entity.ChatMessage;
+import com.example.aiagent.model.vo.ChatMessageVO;
 import com.example.aiagent.service.ChatMessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,6 +27,7 @@ public class ChatController {
 
     private final ApplicationEventPublisher eventPublisher;
     private final ChatMessageService chatMessageService;
+    private final ChatMessageConverter chatMessageConverter;
 
     /**
      * 发送聊天消息
@@ -35,7 +38,7 @@ public class ChatController {
      */
     @PostMapping("/{agentId}/send")
     @Operation(summary = "发送聊天消息", description = "发送消息给指定智能体，Agent 将异步处理并通过 SSE 推送结果")
-    public BaseResponse<ChatMessage> send(
+    public BaseResponse<ChatMessageVO> send(
             @PathVariable String agentId,
             @RequestBody ChatRequest request) {
 
@@ -49,7 +52,8 @@ public class ChatController {
         // 2. 发布聊天事件（异步处理）
         eventPublisher.publishEvent(new ChatEvent(agentId, request.sessionId(), request.userInput()));
 
-        return ResultUtils.success(userMessage);
+        // 3. 返回 VO
+        return ResultUtils.success(chatMessageConverter.toVO(userMessage));
     }
 
     /**

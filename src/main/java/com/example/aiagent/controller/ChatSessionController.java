@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/sessions")
+@RequestMapping("/chat-sessions")
 @RequiredArgsConstructor
 @Tag(name = "会话管理")
 public class ChatSessionController {

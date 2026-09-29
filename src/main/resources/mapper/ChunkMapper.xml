@@ -22,9 +22,9 @@
     </sql>
 
     <select id="similaritySearch" resultMap="BaseResultMap">
-        <![CDATA[
         SELECT
         <include refid="Base_Column_List"/>
+        <![CDATA[
         FROM chunk_bge_m3
         WHERE kb_id = CAST(#{kbId} AS uuid)
         ORDER BY embedding <-> #{vectorLiteral}::vector
