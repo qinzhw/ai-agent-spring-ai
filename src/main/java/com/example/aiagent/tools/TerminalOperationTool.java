@@ -1,5 +1,7 @@
 package com.example.aiagent.tools;
 
+import com.example.aiagent.agent.tool.RuntimeTool;
+import com.example.aiagent.agent.tool.ToolType;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -14,7 +16,22 @@ import java.util.concurrent.TimeUnit;
  * 终端操作工具
  */
 @Component
-public class TerminalOperationTool {
+public class TerminalOperationTool implements RuntimeTool {
+
+    @Override
+    public String getName() {
+        return "terminalOperation";
+    }
+
+    @Override
+    public String getDescription() {
+        return "终端命令执行工具";
+    }
+
+    @Override
+    public ToolType getType() {
+        return ToolType.OPTIONAL;
+    }
 
     /** 命令执行超时时间（秒） */
     private static final long TIMEOUT_SECONDS = 30;

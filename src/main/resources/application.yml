@@ -5,6 +5,22 @@ spring:
   profiles:
     active: local
   ai:
+    # DeepSeek 模型配置
+    deepseek:
+      api-key: 
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-flash
+          temperature: 0.8
+    # 智谱 ZhipuAI 模型配置
+    zhipuai:
+      api-key: 
+      base-url: https://open.bigmodel.cn/api/paas
+      chat:
+        options:
+          model: glm-5.3-flash
+          temperature: 0.8
     mcp:
       client:
         initialized: false
@@ -34,6 +50,17 @@ mybatis-plus:
       id-type: assign_uuid
   type-handlers-package: com.example.aiagent.typehandler
   mapper-locations: classpath:mapper/*.xml
+
+# 文档存储
+document:
+  storage:
+    base-path: ./data/documents
+
+# Ollama 嵌入模型
+ollama:
+  base-url: http://localhost:11434
+  embedding-model: bge-m3
+  similarity-top-k: 3
 
 server:
   # 服务器配置

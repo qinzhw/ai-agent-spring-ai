@@ -5,23 +5,24 @@ package com.example.aiagent.agent.enums;
  */
 public enum AgentState {
 
-    /**
-     * 空闲状态
-     */
+    /** 空闲状态 */
     IDLE,
 
-    /**
-     * 运行中状态
-     */
+    /** 规划中 */
+    PLANNING,
+
+    /** 思考中 */
+    THINKING,
+
+    /** 执行中 */
+    EXECUTING,
+
+    /** 运行中 */
     RUNNING,
 
-    /**
-     * 已完成状态
-     */
+    /** 已完成 */
     FINISHED,
 
-    /**
-     * 错误状态
-     */
+    /** 错误结束 */
     ERROR
 }

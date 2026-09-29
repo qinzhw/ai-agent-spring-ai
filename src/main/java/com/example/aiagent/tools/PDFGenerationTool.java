@@ -1,6 +1,8 @@
 package com.example.aiagent.tools;
 
 import cn.hutool.core.io.FileUtil;
+import com.example.aiagent.agent.tool.RuntimeTool;
+import com.example.aiagent.agent.tool.ToolType;
 import com.example.aiagent.constant.FileConstant;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
@@ -18,7 +20,22 @@ import java.io.IOException;
  * PDF 生成工具
  */
 @Component
-public class PDFGenerationTool {
+public class PDFGenerationTool implements RuntimeTool {
+
+    @Override
+    public String getName() {
+        return "pdfGeneration";
+    }
+
+    @Override
+    public String getDescription() {
+        return "PDF 文件生成工具";
+    }
+
+    @Override
+    public ToolType getType() {
+        return ToolType.OPTIONAL;
+    }
 
     @Tool(description = "Generate a PDF file with given content")
     public String generatePDF(

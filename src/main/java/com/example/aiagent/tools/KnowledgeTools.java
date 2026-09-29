@@ -1,5 +1,7 @@
 package com.example.aiagent.tools;
 
+import com.example.aiagent.agent.tool.RuntimeTool;
+import com.example.aiagent.agent.tool.ToolType;
 import com.example.aiagent.service.RagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;
@@ -13,9 +15,24 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public class KnowledgeTools {
+public class KnowledgeTools implements RuntimeTool {
 
     private final RagService ragService;
+
+    @Override
+    public String getName() {
+        return "KnowledgeTool";
+    }
+
+    @Override
+    public String getDescription() {
+        return "从指定知识库中执行语义检索（RAG）";
+    }
+
+    @Override
+    public ToolType getType() {
+        return ToolType.OPTIONAL;
+    }
 
     @Tool(
             name = "KnowledgeTool",
